@@ -8,7 +8,7 @@ docker-compose,
 Склонировать репозиторий
 
 ```
-git clone https://github.com/fazletdinov/Job-Search-Fast-Api.git
+git clone git@github.com:fazletdinov/testotvoe_crud_FastApi.git
 ```
 
 Далее Вам необходимо заполнить .env файл, как показано
