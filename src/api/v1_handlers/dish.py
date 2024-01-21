@@ -1,8 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Depends, Path, HTTPException, status
-from sqlalchemy import ScalarResult
 
 from src.schemas.dish import DishResponse, DishCreate, DishUpdate
 from src.service.dish import DishService, get_dish_service
@@ -19,13 +18,13 @@ async def get_dishes(
     offset: Annotated[int, Query()] = 0,
     limit: Annotated[int, Query()] = 50,
     dish_service: DishService = Depends(get_dish_service),
-) -> None | Exception | list[DishResponse] | ScalarResult:
+) -> list[DishResponse] | None | Exception | Any:
     return await dish_service.get_dish_list(submenu_id, offset, limit)
 
 
 @dish_router.get(
     "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
-    response_model=DishResponse | Exception,
+    response_model=DishResponse,
 )
 async def get_dish(
     submenu_id: Annotated[UUID, Path()],
@@ -49,7 +48,7 @@ async def create_dish(
 
 @dish_router.patch(
     "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
-    response_model=DishResponse | Exception,
+    response_model=DishResponse,
 )
 async def update_dish(
     submenu_id: Annotated[UUID, Path()],
@@ -68,7 +67,7 @@ async def update_dish(
 
 @dish_router.delete(
     "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
-    response_model=dict[str, str | bool] | None,
+    response_model=dict[str, str | bool],
 )
 async def delete_dish(
     submenu_id: Annotated[UUID, Path()],

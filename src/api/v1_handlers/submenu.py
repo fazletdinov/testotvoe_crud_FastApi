@@ -11,7 +11,7 @@ submenu_router = APIRouter(tags=["Submenu"])
 
 @submenu_router.get(
     "/menus/{menu_id}/submenus",
-    response_model=list[SubmenuResponse] | Exception | None,
+    response_model=list[SubmenuResponse],
 )
 async def get_submenus(
     menu_id: Annotated[UUID, Path()],
@@ -24,7 +24,7 @@ async def get_submenus(
 
 @submenu_router.get(
     "/menus/{menu_id}/submenus/{submenu_id}",
-    response_model=SubmenuResponse | Exception,
+    response_model=SubmenuResponse,
 )
 async def get_submenu(
     menu_id: Annotated[UUID, Path()],
@@ -67,7 +67,7 @@ async def update_submenu(
 
 @submenu_router.delete(
     "/menus/{menu_id}/submenus/{submenu_id}",
-    response_model=dict[str, str | bool] | None,
+    response_model=dict[str, str | bool],
 )
 async def delete_submenu(
     menu_id: Annotated[UUID, Path()],

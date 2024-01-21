@@ -19,7 +19,7 @@ async def get_menus(
     return await menu_service.get_menus_list(offset, limit)
 
 
-@menu_router.get("/menus/{menu_id}", response_model=MenuResponse | Exception)
+@menu_router.get("/menus/{menu_id}", response_model=MenuResponse)
 async def get_menu(
     menu_id: Annotated[UUID, Path()],
     menu_service: MenuService = Depends(get_menu_service),
@@ -30,12 +30,12 @@ async def get_menu(
 @menu_router.post("/menus/", response_model=MenuResponse)
 async def create_menu(
     body: MenuCreate, menu_service: MenuService = Depends(get_menu_service)
-) -> MenuResponse:
+) -> MenuResponse | Exception:
     menu_body: dict[str, str] = body.model_dump()
     return await menu_service.create_menu(menu_body)
 
 
-@menu_router.patch("/menus/{menu_id}", response_model=MenuResponse | Exception)
+@menu_router.patch("/menus/{menu_id}", response_model=MenuResponse)
 async def update_menu(
     menu_id: Annotated[UUID, Path()],
     body: MenuUpdate,
@@ -52,12 +52,12 @@ async def update_menu(
 
 @menu_router.delete(
     "/menus/{menu_id}",
-    response_model=dict[str, str | bool] | Exception | None,
+    response_model=dict[str, str | bool],
 )
 async def delete_menu(
     menu_id: Annotated[UUID, Path()],
     menu_service: MenuService = Depends(get_menu_service),
-) -> dict[str, str | bool] | Exception | None | UUID:
+) -> dict[str, str | bool] | Exception | None:
     menu_deleted_id = await menu_service.delete_menu(menu_id)
     if menu_deleted_id is not None:
         return {"status": True, "message": "The menu has been deleted"}
