@@ -1,8 +1,8 @@
-"""Create tables Menu, Submenu, Dish
+"""Create tables Menu Submenu Dish
 
-Revision ID: 6b29b6b0f82b
+Revision ID: 28fa1e9aafea
 Revises:
-Create Date: 2024-01-19 00:00:09.425046
+Create Date: 2024-01-21 12:08:09.983841
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "6b29b6b0f82b"
+revision: str = "28fa1e9aafea"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

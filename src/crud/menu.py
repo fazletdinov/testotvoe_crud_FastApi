@@ -3,11 +3,12 @@ from typing import Any
 from typing_extensions import override
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select
+from sqlalchemy import exc, update, delete, Result, select, ScalarResult
 from fastapi import HTTPException, status
 
 from .base_classes import CrudeBase
 from src.database.models.menu import Menu
+from src.schemas.menu import MenuResponse
 
 
 class MenuDAL(CrudeBase):
@@ -15,11 +16,12 @@ class MenuDAL(CrudeBase):
         self.db_session = session
 
     @override
-    async def create(self, title: str, description: str) -> Menu | Exception:
+    async def create(self, body: dict[str, Any]) -> Menu | Exception:
         try:
-            new_menu = Menu(title=title, description=description)
+            new_menu = Menu(**body)
             self.db_session.add(new_menu)
             await self.db_session.commit()
+            await self.db_session.refresh(new_menu)
             return new_menu
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -33,7 +35,7 @@ class MenuDAL(CrudeBase):
             )
 
     @override
-    async def get(self, menu_id: UUID) -> Menu | None | Exception:
+    async def get(self, menu_id: UUID) -> MenuResponse | None | Exception:
         try:
             menu = await self.db_session.get(Menu, menu_id)
             return menu
@@ -50,11 +52,11 @@ class MenuDAL(CrudeBase):
 
     async def get_list(
         self, offset: int, limit: int
-    ) -> None | Exception | Any:
+    ) -> None | Exception | ScalarResult | list[MenuResponse]:
         try:
             query = select(Menu).offset(offset=offset).limit(limit=limit)
             res: Result = await self.db_session.execute(query)
-            dish_list = res.fetchall()
+            dish_list = res.scalars()
             return dish_list
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -69,21 +71,20 @@ class MenuDAL(CrudeBase):
 
     @override
     async def update(
-        self, menu_id: UUID, **kwargs: dict[Any, Any]
+        self, menu_id: UUID, body: dict[str, Any]
     ) -> Menu | Exception | None:
         try:
             stmt = (
                 update(Menu)
                 .where(Menu.id == menu_id)
-                .values(kwargs)
-                .returning(Menu)
+                .values(**body)
+                .returning(Menu.id)
             )
             res: Result = await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu = res.fetchone()
-            if menu is not None:
-                return menu[0]
-            return None
+            menu_id = res.scalar()
+            menu = await self.db_session.get(Menu, menu_id)
+            return menu
 
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -97,13 +98,13 @@ class MenuDAL(CrudeBase):
             )
 
     @override
-    async def delete(self, menu_id: UUID) -> Exception | None | Any:
+    async def delete(self, menu_id: UUID) -> Exception | None | UUID:
         try:
             stmt = delete(Menu).where(Menu.id == menu_id).returning(Menu.id)
             res: Result = await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu_id = res.scalar()
-            return menu_id
+            menu = res.scalar()
+            return menu
 
         except exc.SQLAlchemyError:
             raise HTTPException(

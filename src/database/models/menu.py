@@ -1,13 +1,9 @@
-from typing import TYPE_CHECKING
-
 from sqlalchemy.orm import relationship, Mapped, column_property
 from sqlalchemy import select, func
 
 from src.database.models.base import Base
-
-if TYPE_CHECKING:
-    from .submenu import Submenu
-    from .dish import Dish
+from src.database.models.submenu import Submenu
+from src.database.models.dish import Dish
 
 
 class Menu(Base):

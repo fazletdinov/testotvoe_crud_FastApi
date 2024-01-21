@@ -3,23 +3,23 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 
-class MenuCreate(BaseModel):
+class DishCreate(BaseModel):
     title: str
     description: str
+    price: str
 
 
-class MenuUpdate(BaseModel):
+class DishUpdate(BaseModel):
     title: str | None
     description: str | None
+    price: str | None
 
 
-class MenuResponse(BaseModel):
+class DishResponse(BaseModel):
     id: UUID
     title: str
     description: str
-
-    submenus_count: int = 0
-    dishes_count: int = 0
+    price: str
 
     model_config = ConfigDict(
         from_attributes=True, revalidate_instances="always"

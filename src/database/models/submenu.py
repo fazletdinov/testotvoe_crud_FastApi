@@ -5,9 +5,9 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column, column_property
 from sqlalchemy import ForeignKey, func, select
 
 from src.database.models.base import Base
+from src.database.models.dish import Dish
 
 if TYPE_CHECKING:
-    from .dish import Dish
     from .menu import Menu
 
 
@@ -20,7 +20,7 @@ class Submenu(Base):
     )
     menu: Mapped["Menu"] = relationship(back_populates="submenus")
 
-    dishs: Mapped[list["Dish"]] = relationship(
+    dishes: Mapped[list["Dish"]] = relationship(
         back_populates="submenu", cascade="all, delete", passive_deletes=True
     )
 

@@ -3,11 +3,12 @@ from typing import Any
 from typing_extensions import override
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select
+from sqlalchemy import exc, update, delete, Result, select, ScalarResult
 from fastapi import HTTPException, status
 
 from .base_classes import CrudeBase
 from src.database.models.submenu import Submenu
+from src.schemas.submenu import SubmenuCreate, SubmenuResponse
 
 
 class SubmenuDAL(CrudeBase):
@@ -16,12 +17,17 @@ class SubmenuDAL(CrudeBase):
 
     @override
     async def create(
-        self, title: str, description: str
+        self, menu_id: UUID, submenu_body: SubmenuCreate
     ) -> Submenu | Exception:
         try:
-            submenu: Submenu = Submenu(title=title, description=description)
+            submenu: Submenu = Submenu(
+                title=submenu_body.title,
+                description=submenu_body.description,
+                menu_id=menu_id,
+            )
             self.db_session.add(submenu)
-            await self.db_session.execute()
+            await self.db_session.commit()
+            await self.db_session.refresh(submenu)
             return submenu
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -35,9 +41,15 @@ class SubmenuDAL(CrudeBase):
             )
 
     @override
-    async def get(self, submenu_id: UUID) -> Submenu | Exception | None:
+    async def get(
+        self, menu_id: UUID, submenu_id: UUID
+    ) -> Submenu | Exception | None:
         try:
-            submenu = await self.db_session.get(Submenu, submenu_id)
+            query = select(Submenu).where(
+                Submenu.menu_id == menu_id, Submenu.id == submenu_id
+            )
+            res: Result = await self.db_session.execute(query)
+            submenu = res.scalar()
             return submenu
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -51,12 +63,17 @@ class SubmenuDAL(CrudeBase):
             )
 
     async def get_list(
-        self, offset: int, limit: int
-    ) -> None | Exception | Any:
+        self, menu_id: UUID, offset: int, limit: int
+    ) -> None | Exception | list[SubmenuResponse] | ScalarResult:
         try:
-            query = select(Submenu).offset(offset=offset).limit(limit=limit)
+            query = (
+                select(Submenu)
+                .where(Submenu.menu_id == menu_id)
+                .offset(offset)
+                .limit(limit)
+            )
             res: Result = await self.db_session.execute(query)
-            dish_list = res.fetchall()
+            dish_list = res.scalars()
             return dish_list
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -71,21 +88,20 @@ class SubmenuDAL(CrudeBase):
 
     @override
     async def update(
-        self, submenu_id: UUID, **kwargs: dict[Any, Any]
-    ) -> UUID | None | Exception:
+        self, menu_id: UUID, submenu_id: UUID, submenu: dict[str, Any]
+    ) -> Submenu | None | Exception:
         try:
             stmt = (
                 update(Submenu)
-                .where(Submenu.id == submenu_id)
-                .values(kwargs)
-                .returning(Submenu)
+                .where(Submenu.id == submenu_id, Submenu.menu_id == menu_id)
+                .values(**submenu)
+                .returning(Submenu.id)
             )
             res: Result = await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu = res.fetchone()
-            if menu is not None:
-                return menu[0]
-            return None
+            menu_id = res.scalar()
+            menu = await self.db_session.get(Submenu, menu_id)
+            return menu
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -98,19 +114,19 @@ class SubmenuDAL(CrudeBase):
             )
 
     @override
-    async def delete(self, submenu: UUID) -> Exception | None | UUID:
+    async def delete(
+        self, menu_id: UUID, submenu_id: UUID
+    ) -> Exception | None | UUID:
         try:
             stmt = (
                 delete(Submenu)
-                .where(Submenu.id == submenu)
+                .where(Submenu.id == submenu_id, Submenu.menu_id == menu_id)
                 .returning(Submenu.id)
             )
             res = await self.db_session.execute(stmt)
             await self.db_session.commit()
-            del_submenu_id = res.fetchone()
-            if del_submenu_id is not None:
-                return del_submenu_id[0]
-            return None
+            del_submenu_id = res.scalar()
+            return del_submenu_id
 
         except exc.SQLAlchemyError:
             raise HTTPException(

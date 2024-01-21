@@ -21,7 +21,7 @@ class Dish(Base):
             ondelete="CASCADE",
         )
     )
-    submenu: Mapped["Submenu"] = relationship(back_populates="dishs")
+    submenu: Mapped["Submenu"] = relationship(back_populates="dishes")
 
     def __repr__(self) -> str:
         return f"Dish: ({self.id} - {self.title})"
