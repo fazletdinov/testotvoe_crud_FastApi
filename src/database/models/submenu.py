@@ -2,7 +2,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import relationship, Mapped, mapped_column, column_property
-from sqlalchemy import ForeignKey, func, select
+from sqlalchemy import ForeignKey, func, select, UUID
 
 from src.database.models.base import Base
 from src.database.models.dish import Dish
@@ -16,7 +16,7 @@ class Submenu(Base):
     description: Mapped[str]
 
     menu_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("menu.id", ondelete="CASCADE")
+        UUID(as_uuid=True), ForeignKey("menu.id", ondelete="CASCADE")
     )
     menu: Mapped["Menu"] = relationship(back_populates="submenus")
 

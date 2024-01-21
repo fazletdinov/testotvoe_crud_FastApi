@@ -1,8 +1,8 @@
-"""Create tables Menu Submenu Dish
+"""Create tables
 
-Revision ID: 28fa1e9aafea
+Revision ID: c71a89ff5675
 Revises:
-Create Date: 2024-01-21 12:08:09.983841
+Create Date: 2024-01-21 18:10:10.939001
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "28fa1e9aafea"
+revision: str = "c71a89ff5675"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,15 +24,15 @@ def upgrade() -> None:
         "menu",
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=False),
-        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("id", sa.UUID(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "submenu",
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=False),
-        sa.Column("menu_id", sa.Uuid(), nullable=False),
-        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("menu_id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(["menu_id"], ["menu.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -41,8 +41,8 @@ def upgrade() -> None:
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=False),
         sa.Column("price", sa.String(), nullable=False),
-        sa.Column("submenu_id", sa.Uuid(), nullable=False),
-        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("submenu_id", sa.UUID(), nullable=False),
+        sa.Column("id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["submenu_id"], ["submenu.id"], ondelete="CASCADE"
         ),

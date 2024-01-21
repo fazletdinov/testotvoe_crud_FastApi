@@ -10,7 +10,7 @@ from src.service.menu import get_menu_service, MenuService
 menu_router = APIRouter(tags=["Menu"])
 
 
-@menu_router.get("/menus", response_model=list[MenuResponse])
+@menu_router.get("/menus/", response_model=list[MenuResponse])
 async def get_menus(
     offset: Annotated[int, Query()] = 0,
     limit: Annotated[int, Query()] = 50,
@@ -19,7 +19,7 @@ async def get_menus(
     return await menu_service.get_menus_list(offset, limit)
 
 
-@menu_router.get("/menus/{menu_id}", response_model=MenuResponse)
+@menu_router.get("/menus/{menu_id}/", response_model=MenuResponse)
 async def get_menu(
     menu_id: Annotated[UUID, Path()],
     menu_service: MenuService = Depends(get_menu_service),
@@ -27,7 +27,9 @@ async def get_menu(
     return await menu_service.get_menu(menu_id)
 
 
-@menu_router.post("/menus/", response_model=MenuResponse)
+@menu_router.post(
+    "/menus/", response_model=MenuResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_menu(
     body: MenuCreate, menu_service: MenuService = Depends(get_menu_service)
 ) -> MenuResponse | Exception:
@@ -35,7 +37,7 @@ async def create_menu(
     return await menu_service.create_menu(menu_body)
 
 
-@menu_router.patch("/menus/{menu_id}", response_model=MenuResponse)
+@menu_router.patch("/menus/{menu_id}/", response_model=MenuResponse)
 async def update_menu(
     menu_id: Annotated[UUID, Path()],
     body: MenuUpdate,
@@ -44,14 +46,14 @@ async def update_menu(
     menu_body: dict[str, str] = body.model_dump(exclude_none=True)
     if menu_body is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Для обновления нужно ввести хотябы одно поле",
         )
     return await menu_service.update_menu(menu_id, menu_body)
 
 
 @menu_router.delete(
-    "/menus/{menu_id}",
+    "/menus/{menu_id}/",
     response_model=dict[str, str | bool],
 )
 async def delete_menu(

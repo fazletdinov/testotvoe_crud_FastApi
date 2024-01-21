@@ -25,10 +25,18 @@ Menu.submenus_count = column_property(
     .scalar_subquery()
 )
 
+# Menu.dishes_count = column_property(
+#     select(func.count(Dish.id))
+#     .join(Submenu)
+#     .where(Menu.id == Submenu.menu_id and Submenu.id == Dish.submenu_id)
+#     .correlate_except(Dish)
+#     .scalar_subquery()
+# )
+
 Menu.dishes_count = column_property(
     select(func.count(Dish.id))
-    .join(Submenu)
-    .where(Menu.id == Submenu.menu_id and Submenu.id == Dish.submenu_id)
-    .correlate_except(Dish)
-    .scalar_subquery()
+    .join(Submenu, Submenu.menu_id == Menu.id)
+    .where(Dish.submenu_id == Submenu.id)
+    .correlate_except(Submenu)
+    .scalar_subquery(),
 )

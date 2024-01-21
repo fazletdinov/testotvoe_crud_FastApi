@@ -10,7 +10,7 @@ dish_router = APIRouter(tags=["Dish"])
 
 
 @dish_router.get(
-    "/menus/{menu_id}/submenus/{submenu_id}/dishes",
+    "/menus/{menu_id}/submenus/{submenu_id}/dishes/",
     response_model=list[DishResponse],
 )
 async def get_dishes(
@@ -23,7 +23,7 @@ async def get_dishes(
 
 
 @dish_router.get(
-    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
+    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/",
     response_model=DishResponse,
 )
 async def get_dish(
@@ -37,6 +37,7 @@ async def get_dish(
 @dish_router.post(
     "/menus/{menu_id}/submenus/{submenu_id}/dishes/",
     response_model=DishResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_dish(
     submenu_id: Annotated[UUID, Path()],
@@ -47,7 +48,7 @@ async def create_dish(
 
 
 @dish_router.patch(
-    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
+    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/",
     response_model=DishResponse,
 )
 async def update_dish(
@@ -59,14 +60,14 @@ async def update_dish(
     dish: dict[str, str] = dish_body.model_dump(exclude_none=True)
     if dish is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Нужно заполнить хотябы одно поле",
         )
     return await dish_service.update_dish(submenu_id, dish_id, dish)
 
 
 @dish_router.delete(
-    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}",
+    "/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/",
     response_model=dict[str, str | bool],
 )
 async def delete_dish(

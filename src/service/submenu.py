@@ -91,6 +91,6 @@ class SubmenuService(SubmenuServiceBase):
 
 
 def get_submenu_service(
-    session: AsyncSession = Depends(db_helper.get_scoped_session),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ) -> SubmenuService:
     return SubmenuService(session)

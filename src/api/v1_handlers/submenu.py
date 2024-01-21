@@ -10,7 +10,7 @@ submenu_router = APIRouter(tags=["Submenu"])
 
 
 @submenu_router.get(
-    "/menus/{menu_id}/submenus",
+    "/menus/{menu_id}/submenus/",
     response_model=list[SubmenuResponse],
 )
 async def get_submenus(
@@ -23,7 +23,7 @@ async def get_submenus(
 
 
 @submenu_router.get(
-    "/menus/{menu_id}/submenus/{submenu_id}",
+    "/menus/{menu_id}/submenus/{submenu_id}/",
     response_model=SubmenuResponse,
 )
 async def get_submenu(
@@ -35,7 +35,9 @@ async def get_submenu(
 
 
 @submenu_router.post(
-    "/menus/{menu_id}/submenus/", response_model=SubmenuResponse
+    "/menus/{menu_id}/submenus/",
+    response_model=SubmenuResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_submenu(
     menu_id: Annotated[UUID, Path()],
@@ -46,7 +48,7 @@ async def create_submenu(
 
 
 @submenu_router.patch(
-    "/menus/{menu_id}/submenus/{submenu_id}", response_model=SubmenuResponse
+    "/menus/{menu_id}/submenus/{submenu_id}/", response_model=SubmenuResponse
 )
 async def update_submenu(
     menu_id: Annotated[UUID, Path()],
@@ -57,7 +59,7 @@ async def update_submenu(
     submenu_update: dict[str, str] = submenu.model_dump(exclude_none=True)
     if submenu_update is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Нужно заполнить хотябы одно поле",
         )
     return await submenu_service.update_submenu(
@@ -66,7 +68,7 @@ async def update_submenu(
 
 
 @submenu_router.delete(
-    "/menus/{menu_id}/submenus/{submenu_id}",
+    "/menus/{menu_id}/submenus/{submenu_id}/",
     response_model=dict[str, str | bool],
 )
 async def delete_submenu(
