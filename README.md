@@ -1,6 +1,6 @@
 # Проект - тестовое CRUD
 
-Проект реализован с помощью Fastapi, SQLAlchemy, PostgreSql, alembic, asyncio
+Проект реализован с помощью Fastapi, SQLAlchemy, PostgreSql, alembic, asyncio,
 docker-compose,
 
 ### Чтобы запустить проект у себя локально, вам необходимо
@@ -27,15 +27,15 @@ pwd
 make up
 ```
 
-Приложение запустится в контейнере,
-Необходимо применить миграции внутри контейнера,
-выполните следующую команду
-
+Приложение запущено, теперь можете прогнать тесты командой
+в режиме verbose
 ```
-docker compose exec app alembic upgrade head
+make test
 ```
-
-Приложение запущено
+или другой командой, без режима verbose
+```
+docker compose exec app pytest
+```
 
 Отключить приложение можно командой
 

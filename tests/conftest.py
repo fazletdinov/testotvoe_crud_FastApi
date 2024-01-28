@@ -32,7 +32,8 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
 )
 
-Base.metadata.bind = async_engine
+
+# Base.metadata.bind = async_engine
 
 
 def get_scoped_session() -> Any:
@@ -73,7 +74,9 @@ def event_loop():
 @pytest.fixture(scope="session")
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
-        app=app, base_url="http://localhost:8000/api/v1", follow_redirects=True
+        app=app,
+        base_url=f"{get_settings().db_test.API_V1_STR}/api/v1",
+        follow_redirects=True,
     ) as aclient:
         yield aclient
 

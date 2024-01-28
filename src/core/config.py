@@ -20,7 +20,7 @@ class DatabaseSettings(BaseSettings):
     password: SecretStr
     port: int
     host: str
-    echo: bool = True
+    echo: bool = False
 
     def _url(self) -> str:
         return (
