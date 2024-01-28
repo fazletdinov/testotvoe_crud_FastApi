@@ -59,7 +59,7 @@ class MenuService(MenuServiceBase):
         return menu_list
 
     async def update_menu(
-        self, menu_id: UUID, body: dict[str, Any]
+        self, menu_id: UUID, body: dict[str, str]
     ) -> MenuResponse | Exception:
         menu_crud = MenuDAL(self.session)
         menu = await menu_crud.get(menu_id)
@@ -72,6 +72,11 @@ class MenuService(MenuServiceBase):
 
     async def delete_menu(self, menu_id: UUID) -> Exception | None | UUID:
         menu_crud = MenuDAL(self.session)
+        menu = await menu_crud.get(menu_id)
+        if menu is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"
+            )
         menu_delete_id = await menu_crud.delete(menu_id)
         return menu_delete_id
 

@@ -78,6 +78,11 @@ class DishService(DishServiceBase):
         self, submenu_id: UUID, dish_id: UUID
     ) -> Exception | None | UUID:
         dish_crud = DishDAL(self.session)
+        dish = await dish_crud.get(submenu_id, dish_id)
+        if dish is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="dish not found"
+            )
         dish_deleted_id = await dish_crud.delete(submenu_id, dish_id)
         return dish_deleted_id
 

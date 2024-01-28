@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Any
 from typing_extensions import override
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,20 +87,20 @@ class SubmenuDAL(CrudeBase):
 
     @override
     async def update(
-        self, menu_id: UUID, submenu_id: UUID, submenu: dict[str, Any]
+        self, menu_id: UUID, submenu_id: UUID, submenu_body: dict[str, str]
     ) -> Submenu | None | Exception:
         try:
             stmt = (
                 update(Submenu)
                 .where(Submenu.id == submenu_id, Submenu.menu_id == menu_id)
-                .values(**submenu)
+                .values(**submenu_body)
                 .returning(Submenu.id)
             )
             res: Result = await self.db_session.execute(stmt)
             await self.db_session.commit()
             menu_id = res.scalar()
-            menu = await self.db_session.get(Submenu, menu_id)
-            return menu
+            submenu = await self.db_session.get(Submenu, menu_id)
+            return submenu
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

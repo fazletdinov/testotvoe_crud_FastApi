@@ -16,7 +16,7 @@ class MenuDAL(CrudeBase):
         self.db_session = session
 
     @override
-    async def create(self, body: dict[str, Any]) -> Menu | Exception:
+    async def create(self, body: dict[str, str]) -> Menu | Exception | Any:
         try:
             new_menu = Menu(**body)
             self.db_session.add(new_menu)
@@ -71,7 +71,7 @@ class MenuDAL(CrudeBase):
 
     @override
     async def update(
-        self, menu_id: UUID, body: dict[str, Any]
+        self, menu_id: UUID, body: dict[str, str]
     ) -> Menu | Exception | None:
         try:
             stmt = (

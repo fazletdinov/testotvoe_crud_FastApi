@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import FastAPI, APIRouter
 
-from src.core.config import settings
+from src.core.config import get_settings
 from src.api.v1_handlers.dish import dish_router
 from src.api.v1_handlers.menu import menu_router
 from src.api.v1_handlers.submenu import submenu_router
 
-app = FastAPI(title=settings.app.project_name)
+app = FastAPI(title=get_settings().app.project_name)
 
 main_router = APIRouter(prefix="/api/v1")
 

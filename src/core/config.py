@@ -1,4 +1,5 @@
 from pathlib import Path
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr
@@ -33,9 +34,37 @@ class DatabaseSettings(BaseSettings):
         return self._url()
 
 
+class DatabaseTestSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="test_db_", env_file=BASE_DIR / ".env"
+    )
+    name: str
+    user: str
+    password: SecretStr
+    port: int
+    host: str
+    echo: bool = True
+
+    API_V1_STR: str = "http://127.0.0.1:8000"
+
+    def _url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.user}:"
+            f"{self.password.get_secret_value()}"
+            f"@{self.host}:{self.port}/{self.name}"
+        )
+
+    @property
+    def async_url(self) -> str:
+        return self._url()
+
+
 class Settings:
     app: AppSettings = AppSettings()
     db: DatabaseSettings = DatabaseSettings()
+    db_test: DatabaseTestSettings = DatabaseTestSettings()
 
 
-settings: Settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
