@@ -1,12 +1,18 @@
-from fastapi import status
+from fastapi import status, HTTPException
 from httpx import AsyncClient
+from sqlalchemy import select, func, Result
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models.menu import Menu
 from src.database.models.submenu import Submenu
+from src.database.models.dish import Dish
 
 
 async def test_postman(
-    create_menu: Menu, create_submenu: Submenu, async_client: AsyncClient
+    create_menu: Menu,
+    create_submenu: Submenu,
+    async_client: AsyncClient,
+    db: AsyncSession,
 ) -> None:
     data_dish_1: dict[str, str] = {
         "title": "title dish 1",
@@ -26,23 +32,47 @@ async def test_postman(
         url=f"/menus/{create_menu.id}/submenus/{create_submenu.id}/dishes",
         json=data_dish_2,
     )
+    try:
+        query = (
+            select(
+                Menu,
+                func.count(Submenu.id).label("submenus_count"),
+                func.count(Dish.id).label("dishes_count"),
+            )
+            .select_from(Menu)
+            .join(Submenu, Submenu.menu_id == create_menu.id)
+            .join(Dish, Dish.submenu_id == create_submenu.id)
+            .group_by(Menu.id)
+        )
+        res: Result = await db.execute(query)
+        response_get_menu = res.scalar()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Неизвестная ошибка при получение menu",
+        )
+    assert response_get_menu.title == create_menu.title
+    assert response_get_menu.description == create_menu.description
+    assert response_get_menu.dishes_count == 2
+    assert response_get_menu.submenus_count == 1
 
-    response_menu = await async_client.get(url=f"/menus/{create_menu.id}")
-    assert response_menu.status_code == status.HTTP_200_OK
-    content_menu = response_menu.json()
-    assert content_menu["title"] == create_menu.title
-    assert content_menu["description"] == create_menu.description
-    assert content_menu["dishes_count"] == 2
-    assert content_menu["submenus_count"] == 1
-
-    response_get_submenu = await async_client.get(
-        url=f"/menus/{create_menu.id}/submenus/{create_submenu.id}"
-    )
-    assert response_get_submenu.status_code == status.HTTP_200_OK
-    content_get_submenu = response_get_submenu.json()
-    assert content_get_submenu["title"] == create_submenu.title
-    assert content_get_submenu["description"] == create_submenu.description
-    assert content_get_submenu["dishes_count"] == 2
+    try:
+        query = (
+            select(Submenu, func.count(Dish.id).label("dishes_count"))
+            .select_from(Submenu)
+            .join(Dish, Dish.submenu_id == create_submenu.id)
+            .group_by(Submenu.id)
+        )
+        res: Result = await db.execute(query)
+        response_get_submenu = res.scalar()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Неизвестная ошибка при получении submenu",
+        )
+    assert response_get_submenu.title == create_submenu.title
+    assert response_get_submenu.description == create_submenu.description
+    assert response_get_submenu.dishes_count == 2
 
     response_delete_submenu = await async_client.delete(
         url=f"/menus/{create_menu.id}/submenus/{create_submenu.id}"
