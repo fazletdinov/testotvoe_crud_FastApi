@@ -42,6 +42,10 @@ docker compose exec app pytest
 ```commandline
 make down
 ```
+Вывод количества подменю и
+блюд для Меню через один (сложный) ORM запрос релизован в
+директории tests/api/api_v1/test_postman.py
+
 
 ### Автор
 
