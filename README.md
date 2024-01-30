@@ -46,6 +46,8 @@ make down-test
 блюд для Меню через один (сложный) ORM запрос релизован в
 директории src/crud/menu и не очень сложный в директории src/crud/submenu
 
+Тестовый сценарий из Postman реализовал в директории tests/api/api_v1/test_postman
+
 
 ### Автор
 
