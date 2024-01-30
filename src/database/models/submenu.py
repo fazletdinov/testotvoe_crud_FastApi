@@ -1,8 +1,8 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import relationship, Mapped, mapped_column, column_property
-from sqlalchemy import ForeignKey, func, select, UUID
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import ForeignKey, UUID
 
 from src.database.models.base import Base
 from src.database.models.dish import Dish
@@ -26,11 +26,3 @@ class Submenu(Base):
 
     def __repr__(self) -> str:
         return f"Submenu: ({self.id} - {self.title})"
-
-
-Submenu.dishes_count = column_property(
-    select(func.count(Dish.id))
-    .where(Submenu.id == Dish.submenu_id)
-    .correlate_except(Dish)
-    .scalar_subquery()
-)

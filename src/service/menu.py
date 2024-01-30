@@ -1,14 +1,15 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Sequence
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status, Depends
-from sqlalchemy import ScalarResult
+from sqlalchemy import Row
 
 from src.crud.menu import MenuDAL
 from src.database.session import db_helper
 from src.schemas.menu import MenuResponse
+from src.database.models.menu import Menu
 
 
 class MenuServiceBase(metaclass=ABCMeta):
@@ -44,16 +45,17 @@ class MenuService(MenuServiceBase):
 
     async def get_menu(self, menu_id: UUID) -> MenuResponse | Exception:
         menu_crud = MenuDAL(self.session)
-        menu = await menu_crud.get(menu_id)
+        menu = await self.session.get(Menu, menu_id)
         if menu is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"
             )
+        menu = await menu_crud.get(menu_id)
         return MenuResponse.model_validate(menu)
 
     async def get_menus_list(
         self, offset: int, limit: int
-    ) -> None | Exception | ScalarResult | list[MenuResponse]:
+    ) -> None | Exception | Sequence[Row[tuple[Menu, int, int]]]:
         menu_crud = MenuDAL(self.session)
         menu_list = await menu_crud.get_list(offset, limit)
         return menu_list
@@ -62,7 +64,7 @@ class MenuService(MenuServiceBase):
         self, menu_id: UUID, body: dict[str, str]
     ) -> MenuResponse | Exception:
         menu_crud = MenuDAL(self.session)
-        menu = await menu_crud.get(menu_id)
+        menu = await self.session.get(Menu, menu_id)
         if menu is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"
@@ -72,7 +74,7 @@ class MenuService(MenuServiceBase):
 
     async def delete_menu(self, menu_id: UUID) -> Exception | None | UUID:
         menu_crud = MenuDAL(self.session)
-        menu = await menu_crud.get(menu_id)
+        menu = await self.session.get(Menu, menu_id)
         if menu is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"

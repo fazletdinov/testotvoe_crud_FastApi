@@ -16,10 +16,6 @@ from main import app
 from src.core.config import get_settings
 from src.database.models import Base
 from src.database.session import db_helper
-from src.crud.menu import MenuDAL
-from src.crud.submenu import SubmenuDAL
-from src.schemas.submenu import SubmenuCreate
-from src.database.models.menu import Menu
 
 async_engine = create_async_engine(
     url=get_settings().db_test.async_url, echo=False, poolclass=StaticPool
@@ -32,8 +28,7 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
 )
 
-
-# Base.metadata.bind = async_engine
+Base.metadata.bind = async_engine
 
 
 def get_scoped_session() -> Any:
@@ -54,7 +49,7 @@ app.dependency_overrides[
 ] = override_scoped_session_dependency
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="class")
 async def async_db_engine() -> None:
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -89,18 +84,50 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-async def create_menu(db: AsyncSession):
-    data_menu = {"title": "title menu 1", "description": "description menu 1"}
-    menu_crud = MenuDAL(db)
-    return await menu_crud.create(data_menu)
+async def menu_data():
+    return {
+        "title": "title menu 1",
+        "description": "description menu description 1",
+    }
 
 
 @pytest.fixture
-async def create_submenu(create_menu: Menu, db: AsyncSession):
-    data_submenu = {
+async def submenu_data():
+    return {
         "title": "title submenu 1",
-        "description": "description submenu 1",
+        "description": "description submenu description 1",
     }
-    submenu_crud = SubmenuDAL(db)
-    submenu_body = SubmenuCreate(**data_submenu)
-    return await submenu_crud.create(create_menu.id, submenu_body)
+
+
+@pytest.fixture
+async def dish_data():
+    return {
+        "title": "title dish 1",
+        "description": "description dish description 1",
+        "price": "77.77",
+    }
+
+
+@pytest.fixture
+async def update_menu_data():
+    return {
+        "title": "title updated menu 1",
+        "description": "description updated menu 1",
+    }
+
+
+@pytest.fixture
+async def update_submenu_data():
+    return {
+        "title": "title updated submenu 1",
+        "description": "description updated submenu 1",
+    }
+
+
+@pytest.fixture
+async def update_dish_data():
+    return {
+        "title": "title updated submenu 1",
+        "description": "description updated submenu 1",
+        "price": "99.99",
+    }

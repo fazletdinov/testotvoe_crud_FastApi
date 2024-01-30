@@ -2,13 +2,18 @@ version: '3.8'
 
 volumes:
   pg_data:
-  pg_data_test:
+
+networks:
+  dev:
+    driver: bridge
 
 services:
   db:
     image: postgres:15.1-alpine
     container_name: postgres
     restart: always
+    networks:
+      dev:
     volumes:
       - pg_data:/var/lib/postgresql/data
     environment:
@@ -20,25 +25,12 @@ services:
     expose:
       - "5432"
 
-  db_test:
-    image: postgres:15.1-alpine
-    container_name: postgres_test
-    restart: always
-    volumes:
-      - pg_data_test:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${TEST_DB_NAME}
-      POSTGRES_USER: ${TEST_DB_USER}
-      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD}
-    env_file:
-      - .env
-    expose:
-      - "5432"
-
-
   app:
-    build: .
+    build:
+      dockerfile: Dockerfile
     container_name: app
+    networks:
+      dev:
     env_file:
       - .env
     depends_on:
@@ -46,4 +38,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ${VOLUME_APP}:/code
+      - ./:/code
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://0.0.0.0:8000/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3

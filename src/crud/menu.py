@@ -1,14 +1,15 @@
 from uuid import UUID
-from typing import Any
+from typing import Any, Tuple, Sequence
 from typing_extensions import override
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select, ScalarResult
+from sqlalchemy import exc, update, delete, Result, select, func, Row
 from fastapi import HTTPException, status
 
 from .base_classes import CrudeBase
 from src.database.models.menu import Menu
-from src.schemas.menu import MenuResponse
+from src.database.models.submenu import Submenu
+from src.database.models.dish import Dish
 
 
 class MenuDAL(CrudeBase):
@@ -22,7 +23,7 @@ class MenuDAL(CrudeBase):
             self.db_session.add(new_menu)
             await self.db_session.commit()
             await self.db_session.refresh(new_menu)
-            return new_menu
+            return await self.get(new_menu.id)
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -35,29 +36,57 @@ class MenuDAL(CrudeBase):
             )
 
     @override
-    async def get(self, menu_id: UUID) -> MenuResponse | None | Exception:
+    async def get(
+        self, menu_id: UUID
+    ) -> Row[Tuple[Menu, int, int]] | Exception:
         try:
-            menu = await self.db_session.get(Menu, menu_id)
-            return menu
+            query = (
+                select(
+                    Menu.id,
+                    Menu.title,
+                    Menu.description,
+                    func.count(Submenu.id.distinct()).label("submenus_count"),
+                    func.count(Dish.id.distinct()).label("dishes_count"),
+                )
+                .where(Menu.id == menu_id)
+                .select_from(Menu)
+                .outerjoin(Submenu)
+                .outerjoin(Dish)
+                .group_by(Menu.id, Menu.title, Menu.description)
+            )
+            res: Result = await self.db_session.execute(query)
+            menu_info: Row[Tuple[Menu, int, int]] | None = res.fetchone()
+            return menu_info
+
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка SQLAlchemyError при получение Menu",
             )
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получение Menu",
-            )
 
     async def get_list(
         self, offset: int, limit: int
-    ) -> None | Exception | ScalarResult | list[MenuResponse]:
+    ) -> None | Exception | Sequence[Row[tuple[Menu, int, int]]]:
         try:
-            query = select(Menu).offset(offset=offset).limit(limit=limit)
+            query = (
+                select(
+                    Menu.id,
+                    Menu.title,
+                    Menu.description,
+                    func.count(Submenu.id.distinct()).label("submenus_count"),
+                    func.count(Dish.id.distinct()).label("dishes_count"),
+                )
+                .select_from(Menu)
+                .outerjoin(Submenu, Menu.id == Submenu.menu_id)
+                .outerjoin(Dish, Submenu.id == Dish.submenu_id)
+                .group_by(Menu.id, Menu.title, Menu.description)
+                .offset(offset=offset)
+                .limit(limit=limit)
+            )
             res: Result = await self.db_session.execute(query)
-            dish_list = res.scalars()
-            return dish_list
+            menu_list = res.all()
+            return menu_list
+
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -74,16 +103,10 @@ class MenuDAL(CrudeBase):
         self, menu_id: UUID, body: dict[str, str]
     ) -> Menu | Exception | None:
         try:
-            stmt = (
-                update(Menu)
-                .where(Menu.id == menu_id)
-                .values(**body)
-                .returning(Menu.id)
-            )
-            res: Result = await self.db_session.execute(stmt)
+            stmt = update(Menu).where(Menu.id == menu_id).values(**body)
+            await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu_id = res.scalar()
-            menu = await self.db_session.get(Menu, menu_id)
+            menu = await self.get(menu_id)
             return menu
 
         except exc.SQLAlchemyError:
@@ -103,8 +126,8 @@ class MenuDAL(CrudeBase):
             stmt = delete(Menu).where(Menu.id == menu_id).returning(Menu.id)
             res: Result = await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu = res.scalar()
-            return menu
+            menu_id = res.scalar()
+            return menu_id
 
         except exc.SQLAlchemyError:
             raise HTTPException(

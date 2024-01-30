@@ -1,13 +1,15 @@
 from uuid import UUID
 from typing_extensions import override
+from typing import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select, ScalarResult
+from sqlalchemy import exc, update, delete, Result, select, Row, func
 from fastapi import HTTPException, status
 
 from .base_classes import CrudeBase
 from src.database.models.submenu import Submenu
-from src.schemas.submenu import SubmenuCreate, SubmenuResponse
+from src.database.models.dish import Dish
+from src.schemas.submenu import SubmenuCreate
 
 
 class SubmenuDAL(CrudeBase):
@@ -17,7 +19,7 @@ class SubmenuDAL(CrudeBase):
     @override
     async def create(
         self, menu_id: UUID, submenu_body: SubmenuCreate
-    ) -> Submenu | Exception:
+    ) -> Submenu | Exception | None:
         try:
             submenu: Submenu = Submenu(
                 title=submenu_body.title,
@@ -27,7 +29,7 @@ class SubmenuDAL(CrudeBase):
             self.db_session.add(submenu)
             await self.db_session.commit()
             await self.db_session.refresh(submenu)
-            return submenu
+            return await self.get(menu_id, submenu.id)
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -42,37 +44,55 @@ class SubmenuDAL(CrudeBase):
     @override
     async def get(
         self, menu_id: UUID, submenu_id: UUID
-    ) -> Submenu | Exception | None:
+    ) -> Row[tuple[Submenu, int]] | Exception | None:
         try:
-            query = select(Submenu).where(
-                Submenu.menu_id == menu_id, Submenu.id == submenu_id
+            query = (
+                select(
+                    Submenu.id,
+                    Submenu.title,
+                    Submenu.description,
+                    func.count(Dish.id.distinct()).label("dishes_count"),
+                )
+                .where(Submenu.menu_id == menu_id, Submenu.id == submenu_id)
+                .select_from(Submenu)
+                .outerjoin(Dish)
+                .group_by(Submenu.id, Submenu.title, Submenu.description)
             )
             res: Result = await self.db_session.execute(query)
-            submenu = res.scalar()
+            submenu: Row[tuple[Submenu, int]] | None = res.fetchone()
+            if submenu is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="submenu not found",
+                )
             return submenu
+
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Ошибка SqlalchemyError при получении Submenu",
             )
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получении Submenu",
-            )
 
     async def get_list(
         self, menu_id: UUID, offset: int, limit: int
-    ) -> None | Exception | list[SubmenuResponse] | ScalarResult:
+    ) -> None | Exception | Sequence[Row[tuple[Submenu, int]]]:
         try:
             query = (
-                select(Submenu)
+                select(
+                    Submenu.id,
+                    Submenu.title,
+                    Submenu.description,
+                    func.count(Dish.id.distinct()).label("dishes_count"),
+                )
                 .where(Submenu.menu_id == menu_id)
+                .select_from(Submenu)
+                .outerjoin(Dish)
+                .group_by(Submenu.id, Submenu.title, Submenu.description)
                 .offset(offset)
                 .limit(limit)
             )
             res: Result = await self.db_session.execute(query)
-            dish_list = res.scalars()
+            dish_list: Sequence[Row[tuple[Submenu, int]]] = res.all()
             return dish_list
         except exc.SQLAlchemyError:
             raise HTTPException(
@@ -94,13 +114,10 @@ class SubmenuDAL(CrudeBase):
                 update(Submenu)
                 .where(Submenu.id == submenu_id, Submenu.menu_id == menu_id)
                 .values(**submenu_body)
-                .returning(Submenu.id)
             )
-            res: Result = await self.db_session.execute(stmt)
+            await self.db_session.execute(stmt)
             await self.db_session.commit()
-            menu_id = res.scalar()
-            submenu = await self.db_session.get(Submenu, menu_id)
-            return submenu
+            return await self.get(menu_id, submenu_id)
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

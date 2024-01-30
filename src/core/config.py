@@ -45,7 +45,7 @@ class DatabaseTestSettings(BaseSettings):
     host: str
     echo: bool = True
 
-    API_V1_STR: str = "http://127.0.0.1:8000"
+    API_V1_STR: str = "http://127.0.0.1:8006"
 
     def _url(self) -> str:
         return (

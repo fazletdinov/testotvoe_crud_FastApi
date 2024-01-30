@@ -8,7 +8,7 @@ class SubmenuResponse(BaseModel):
     title: str
     description: str
 
-    dishes_count: int = 0
+    dishes_count: int
 
     model_config = ConfigDict(
         from_attributes=True, revalidate_instances="always"

@@ -13,7 +13,6 @@ alembic = "^1.13.1"
 uvicorn = {extras = ["standart"], version = "^0.26.0"}
 asyncpg = "^0.29.0"
 typing-extensions = "^4.9.0"
-pytest-asyncio = "<0.23.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -21,9 +20,8 @@ black = "^23.12.1"
 mypy = "^1.8.0"
 flake8 = "^7.0.0"
 pre-commit = "^3.6.0"
+pytest-asyncio = "<0.23.0"
 
-
-[tool.poetry.group.tests.dependencies]
 
 [build-system]
 requires = ["poetry-core"]
