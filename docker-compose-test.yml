@@ -26,6 +26,12 @@ services:
     expose:
       - "5432"
 
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${TEST_DB_USER} -d ${TEST_DB_NAME}'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   app-test:
     build:
       dockerfile: Dockerfile-test
