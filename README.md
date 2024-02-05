@@ -42,13 +42,15 @@ make test
 ```commandline
 make down-test
 ```
-Вывод количества подменю и
-блюд для Меню через один (сложный) ORM запрос релизован в
+* Вывод количества подменю и блюд для Меню через один (сложный) ORM запрос релизован в
 директории src/crud/menu и не очень сложный в директории src/crud/submenu
-
-Тестовый сценарий из Postman реализовал в директории tests/api/api_v1/test_postman
-
-
+* Тестовый сценарий из Postman реализовал в директории tests/api/api_v1/test_postman
+* Реализовал в тестах аналог Django reverse() для FastAPI - tests/conftest в виде функции reverse_url
+* Описать ручки API в соответствий c OpenAPI - [openapi.json](openapi.json)
+* Конфигурция редис лежит в директории redis/redis.conf взято из документации
+* bind 0.0.0.0 — замапил Redis на внутренний localhost Docker-контейнера.
+* maxmemory 100mb — ограничил размер кэша.
+* maxmemory-policy volatile-ttl — эта политика позволяет удалить наименее актуальные данные при достижении лимита памяти.
 ### Автор
 
 [Idel Fazletdinov - fazletdinov](https://github.com/fazletdinov)
