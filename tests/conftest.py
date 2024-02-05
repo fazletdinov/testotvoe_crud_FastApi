@@ -1,20 +1,24 @@
-from typing import Any, AsyncGenerator
-from asyncio import current_task
 import asyncio
-from httpx import AsyncClient
+from asyncio import current_task
+from typing import Any, AsyncGenerator
+from uuid import UUID
 
+import backoff
 import pytest
+from fastapi import Depends
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
-    create_async_engine,
     async_scoped_session,
     async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.pool import StaticPool
 
 from main import app
-from src.core.config import get_settings
+from src.core.config import Settings, get_settings
 from src.database.models import Base
+from src.database.redis_cache import RedisDB, get_redis
 from src.database.session import db_helper
 
 async_engine = create_async_engine(
@@ -44,13 +48,22 @@ async def override_scoped_session_dependency() -> AsyncSession:
     await session.close()
 
 
+@backoff.on_exception(backoff.expo, ConnectionError, max_tries=5, raise_on_giveup=True)
+async def override_get_redis(settings: Settings = Depends(get_settings)) -> RedisDB:
+    return RedisDB(host=settings.redis_test.host,
+                   port=settings.redis_test.port,
+                   password=settings.redis_test.password.get_secret_value(),
+                   expire_in_sec=settings.redis_test.expire_in_sec)
+
+
 app.dependency_overrides[
     db_helper.scoped_session_dependency
 ] = override_scoped_session_dependency
+app.dependency_overrides[get_redis] = override_get_redis
 
 
-@pytest.fixture(autouse=True, scope="class")
-async def async_db_engine() -> None:
+@pytest.fixture(autouse=True, scope='class')
+async def async_db_engine() -> AsyncGenerator:
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -58,7 +71,7 @@ async def async_db_engine() -> None:
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
@@ -66,17 +79,17 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
-        app=app,
-        base_url=f"{get_settings().db_test.API_V1_STR}/api/v1",
-        follow_redirects=True,
+            app=app,
+            base_url=f'{get_settings().db_test.API_V1_STR}',
+            follow_redirects=True,
     ) as aclient:
         yield aclient
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 async def db() -> AsyncGenerator[AsyncSession, None]:
     session = get_scoped_session()
     yield session
@@ -86,48 +99,74 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 async def menu_data():
     return {
-        "title": "title menu 1",
-        "description": "description menu description 1",
+        'title': 'title menu 1',
+        'description': 'description menu description 1',
     }
 
 
 @pytest.fixture
 async def submenu_data():
     return {
-        "title": "title submenu 1",
-        "description": "description submenu description 1",
+        'title': 'title submenu 1',
+        'description': 'description submenu description 1',
     }
 
 
 @pytest.fixture
 async def dish_data():
     return {
-        "title": "title dish 1",
-        "description": "description dish description 1",
-        "price": "77.77",
+        'title': 'title dish 1',
+        'description': 'description dish description 1',
+        'price': '77.77',
     }
 
 
 @pytest.fixture
 async def update_menu_data():
     return {
-        "title": "title updated menu 1",
-        "description": "description updated menu 1",
+        'title': 'title updated menu 1',
+        'description': 'description updated menu 1',
     }
 
 
 @pytest.fixture
 async def update_submenu_data():
     return {
-        "title": "title updated submenu 1",
-        "description": "description updated submenu 1",
+        'title': 'title updated submenu 1',
+        'description': 'description updated submenu 1',
     }
 
 
 @pytest.fixture
 async def update_dish_data():
     return {
-        "title": "title updated submenu 1",
-        "description": "description updated submenu 1",
-        "price": "99.99",
+        'title': 'title updated submenu 1',
+        'description': 'description updated submenu 1',
+        'price': '99.99',
     }
+
+
+def reverse_url(route_name: str, **kwargs: UUID) -> str:
+    routes = {
+        'get_menus': '/menus',
+        'post_menu': '/menus',
+        'get_menu': f'/menus/{kwargs.get("menu_id", "")}',
+        'patch_menu': f'/menus/{kwargs.get("menu_id", "")}',
+        'delete_menu': f'/menus/{kwargs.get("menu_id", "")}',
+        'get_menu_orm': f'/menus/ORM/{kwargs.get("menu_id", "")}',
+        'get_submenus': f'/menus/{kwargs.get("menu_id", "")}/submenus',
+        'post_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus',
+        'get_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
+        'patch_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
+        'delete_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
+        'get_dishes': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}/dishes',
+        'post_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}/dishes',
+        'get_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
+                    f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
+        'patch_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
+                      f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
+        'delete_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
+                       f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
+    }
+
+    return str(routes.get(route_name))

@@ -49,4 +49,4 @@ repos:
     rev: v0.991
     hooks:
     -   id: mypy
-        exclude: 'migrations'
+        exclude: "migrations"

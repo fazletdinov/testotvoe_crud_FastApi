@@ -46,6 +46,11 @@ services:
       - .env
     expose:
       - "6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
 
   app:
     build:
@@ -57,6 +62,7 @@ services:
       - .env
     depends_on:
       - db
+      - redis_cache
     ports:
       - "8000:8000"
     volumes:

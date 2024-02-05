@@ -5,7 +5,7 @@ down:
 migrate:
 	docker compose -f docker-compose.yml exec app alembic upgrade head
 test:
-	docker compose -f docker-compose-test.yml exec app-test pytest -v
+	docker compose -f docker-compose-test.yml exec app_test pytest -v
 up-test:
 	docker compose -f docker-compose-test.yml up -d --build
 down-test:

@@ -45,7 +45,7 @@ class DatabaseTestSettings(BaseSettings):
     host: str
     echo: bool = True
 
-    API_V1_STR: str = 'http://127.0.0.1:8006'
+    API_V1_STR: str = 'http://127.0.0.1:8006/api/v1'
 
     def _url(self) -> str:
         return (
@@ -68,11 +68,21 @@ class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='redis_', env_file=BASE_DIR / '.env')
 
 
+class RedisTestSettings(BaseSettings):
+    host: str
+    port: int
+    password: SecretStr
+    expire_in_sec: int
+
+    model_config = SettingsConfigDict(env_prefix='test_redis_', env_file=BASE_DIR / '.env')
+
+
 class Settings:
     app: AppSettings = AppSettings()
     db: DatabaseSettings = DatabaseSettings()
     db_test: DatabaseTestSettings = DatabaseTestSettings()
     redis: RedisSettings = RedisSettings()
+    redis_test: RedisTestSettings = RedisTestSettings()
 
 
 @lru_cache

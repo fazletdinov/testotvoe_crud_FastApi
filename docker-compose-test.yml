@@ -7,7 +7,6 @@ networks:
   dev-test:
     driver: bridge
 
-
 services:
   db_test:
     image: postgres:15.1-alpine
@@ -32,23 +31,39 @@ services:
       timeout: 3s
       retries: 3
 
-  app-test:
+  redis_cache_test:
+    image: redis:7.2-rc2
+    container_name: redis_test
+    networks:
+      dev-test:
+    environment:
+      REDIS_PASSWORD: ${TEST_REDIS_PASSWORD}
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: /bin/sh -c "redis-server --requirepass $$TEST_REDIS_PASSWORD"
+    restart: on-failure
+    env_file:
+      - .env
+    expose:
+      - "6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+  app_test:
     build:
       dockerfile: Dockerfile-test
-    container_name: app-test
+    container_name: app_test
     networks:
       dev-test:
     env_file:
       - .env
     depends_on:
       - db_test
+      - redis_cache_test
     ports:
       - "8006:8000"
     volumes:
       - ./:/code
-
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://0.0.0.0:8006/health" ]
-      interval: 10s
-      timeout: 10s
-      retries: 3
