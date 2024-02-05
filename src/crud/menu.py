@@ -1,15 +1,17 @@
+from typing import Any, Sequence
 from uuid import UUID
-from typing import Any, Tuple, Sequence
+
+from fastapi import HTTPException, status
+from sqlalchemy import Result, Row, delete, exc, func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import override
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select, func, Row
-from fastapi import HTTPException, status
-
-from .base_classes import CrudeBase
+from src.database.models.dish import Dish
 from src.database.models.menu import Menu
 from src.database.models.submenu import Submenu
-from src.database.models.dish import Dish
+from src.schemas.menu import MenuCreate
+
+from .base_classes import CrudeBase
 
 
 class MenuDAL(CrudeBase):
@@ -17,9 +19,10 @@ class MenuDAL(CrudeBase):
         self.db_session = session
 
     @override
-    async def create(self, body: dict[str, str]) -> Menu | Exception | Any:
+    async def create(self, body: MenuCreate) -> Menu | Exception | Any:
         try:
-            new_menu = Menu(**body)
+            new_menu = Menu(title=body.title,
+                            description=body.description)
             self.db_session.add(new_menu)
             await self.db_session.commit()
             await self.db_session.refresh(new_menu)
@@ -27,26 +30,26 @@ class MenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при создании Menu",
+                detail='Ошибка SqlalchemyError при создании Menu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при создании Menu",
+                detail='Неизвестная ошибка при создании Menu',
             )
 
     @override
     async def get(
-        self, menu_id: UUID
-    ) -> Row[Tuple[Menu, int, int]] | Exception:
+            self, menu_id: UUID
+    ) -> Row[tuple[Menu, int, int]] | Exception | None:
         try:
             query = (
                 select(
                     Menu.id,
                     Menu.title,
                     Menu.description,
-                    func.count(Submenu.id.distinct()).label("submenus_count"),
-                    func.count(Dish.id.distinct()).label("dishes_count"),
+                    func.count(Submenu.id.distinct()).label('submenus_count'),
+                    func.count(Dish.id.distinct()).label('dishes_count'),
                 )
                 .where(Menu.id == menu_id)
                 .select_from(Menu)
@@ -55,26 +58,26 @@ class MenuDAL(CrudeBase):
                 .group_by(Menu.id, Menu.title, Menu.description)
             )
             res: Result = await self.db_session.execute(query)
-            menu_info: Row[Tuple[Menu, int, int]] | None = res.fetchone()
+            menu_info: Row[tuple[Menu, int, int]] | None = res.fetchone()
             return menu_info
 
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SQLAlchemyError при получение Menu",
+                detail='Ошибка SQLAlchemyError при получение Menu',
             )
 
     async def get_list(
-        self, offset: int, limit: int
-    ) -> None | Exception | Sequence[Row[tuple[Menu, int, int]]]:
+            self, offset: int, limit: int
+    ) -> Sequence[Row[tuple[Menu, int, int]]]:
         try:
             query = (
                 select(
                     Menu.id,
                     Menu.title,
                     Menu.description,
-                    func.count(Submenu.id.distinct()).label("submenus_count"),
-                    func.count(Dish.id.distinct()).label("dishes_count"),
+                    func.count(Submenu.id.distinct()).label('submenus_count'),
+                    func.count(Dish.id.distinct()).label('dishes_count'),
                 )
                 .select_from(Menu)
                 .outerjoin(Submenu, Menu.id == Submenu.menu_id)
@@ -90,17 +93,17 @@ class MenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при получении списка Menu",
+                detail='Ошибка SqlalchemyError при получении списка Menu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получении списка Menu",
+                detail='Неизвестная ошибка при получении списка Menu',
             )
 
     @override
     async def update(
-        self, menu_id: UUID, body: dict[str, str]
+            self, menu_id: UUID, body: dict[str, str]
     ) -> Menu | Exception | None:
         try:
             stmt = update(Menu).where(Menu.id == menu_id).values(**body)
@@ -112,12 +115,12 @@ class MenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SQLAlchemyError при обновлении Menu",
+                detail='Ошибка SQLAlchemyError при обновлении Menu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при обновлении Menu",
+                detail='Неизвестная ошибка при обновлении Menu',
             )
 
     @override
@@ -132,10 +135,10 @@ class MenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SQLAlchemyError при удалении Menu",
+                detail='Ошибка SQLAlchemyError при удалении Menu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при удалении Menu",
+                detail='Неизвестная ошибка при удалении Menu',
             )

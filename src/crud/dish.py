@@ -1,13 +1,14 @@
 from uuid import UUID
+
+from fastapi import HTTPException, status
+from sqlalchemy import Result, ScalarResult, delete, exc, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import override
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select, ScalarResult
-from fastapi import HTTPException, status
+from src.database.models.dish import Dish
+from src.schemas.dish import DishCreate
 
 from .base_classes import CrudeBase
-from src.database.models.dish import Dish
-from src.schemas.dish import DishCreate, DishResponse
 
 
 class DishDAL(CrudeBase):
@@ -32,12 +33,12 @@ class DishDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при создании Dish",
+                detail='Ошибка SqlalchemyError при создании Dish',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при создании Dish",
+                detail='Неизвестная ошибка при создании Dish',
             )
 
     @override
@@ -54,17 +55,17 @@ class DishDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при получении Dish",
+                detail='Ошибка SqlalchemyError при получении Dish',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получении Dish",
+                detail='Неизвестная ошибка при получении Dish',
             )
 
     async def get_list(
         self, submenu_id: UUID, offset: int, limit: int
-    ) -> None | Exception | list[DishResponse] | ScalarResult:
+    ) -> ScalarResult:
         try:
             query = (
                 select(Dish)
@@ -78,12 +79,12 @@ class DishDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при получении списка Dish",
+                detail='Ошибка SqlalchemyError при получении списка Dish',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получении списка Dish",
+                detail='Неизвестная ошибка при получении списка Dish',
             )
 
     @override
@@ -105,12 +106,12 @@ class DishDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при обновлении Dish",
+                detail='Ошибка SqlalchemyError при обновлении Dish',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при обновлении Dish",
+                detail='Неизвестная ошибка при обновлении Dish',
             )
 
     @override
@@ -130,10 +131,10 @@ class DishDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при удалении Dish",
+                detail='Ошибка SqlalchemyError при удалении Dish',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при удалении Dish",
+                detail='Неизвестная ошибка при удалении Dish',
             )

@@ -1,15 +1,16 @@
-from uuid import UUID
-from typing_extensions import override
 from typing import Sequence
+from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exc, update, delete, Result, select, Row, func
 from fastapi import HTTPException, status
+from sqlalchemy import Result, Row, delete, exc, func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing_extensions import override
+
+from src.database.models.dish import Dish
+from src.database.models.submenu import Submenu
+from src.schemas.submenu import SubmenuCreate
 
 from .base_classes import CrudeBase
-from src.database.models.submenu import Submenu
-from src.database.models.dish import Dish
-from src.schemas.submenu import SubmenuCreate
 
 
 class SubmenuDAL(CrudeBase):
@@ -33,12 +34,12 @@ class SubmenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при создании Submenu",
+                detail='Ошибка SqlalchemyError при создании Submenu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при создании Submenu",
+                detail='Неизвестная ошибка при создании Submenu',
             )
 
     @override
@@ -51,7 +52,7 @@ class SubmenuDAL(CrudeBase):
                     Submenu.id,
                     Submenu.title,
                     Submenu.description,
-                    func.count(Dish.id.distinct()).label("dishes_count"),
+                    func.count(Dish.id.distinct()).label('dishes_count'),
                 )
                 .where(Submenu.menu_id == menu_id, Submenu.id == submenu_id)
                 .select_from(Submenu)
@@ -63,26 +64,26 @@ class SubmenuDAL(CrudeBase):
             if submenu is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="submenu not found",
+                    detail='submenu not found',
                 )
             return submenu
 
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при получении Submenu",
+                detail='Ошибка SqlalchemyError при получении Submenu',
             )
 
     async def get_list(
         self, menu_id: UUID, offset: int, limit: int
-    ) -> None | Exception | Sequence[Row[tuple[Submenu, int]]]:
+    ) -> Sequence[Row[tuple[Submenu, int]]]:
         try:
             query = (
                 select(
                     Submenu.id,
                     Submenu.title,
                     Submenu.description,
-                    func.count(Dish.id.distinct()).label("dishes_count"),
+                    func.count(Dish.id.distinct()).label('dishes_count'),
                 )
                 .where(Submenu.menu_id == menu_id)
                 .select_from(Submenu)
@@ -97,12 +98,12 @@ class SubmenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при получении списка Submenu",
+                detail='Ошибка SqlalchemyError при получении списка Submenu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при получении списка Submenu",
+                detail='Неизвестная ошибка при получении списка Submenu',
             )
 
     @override
@@ -121,12 +122,12 @@ class SubmenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при обновлении Submenu",
+                detail='Ошибка SqlalchemyError при обновлении Submenu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при обновлении Submenu",
+                detail='Неизвестная ошибка при обновлении Submenu',
             )
 
     @override
@@ -147,10 +148,10 @@ class SubmenuDAL(CrudeBase):
         except exc.SQLAlchemyError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Ошибка SqlalchemyError при удалении Submenu",
+                detail='Ошибка SqlalchemyError при удалении Submenu',
             )
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Неизвестная ошибка при удалении Submenu",
+                detail='Неизвестная ошибка при удалении Submenu',
             )
