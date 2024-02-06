@@ -149,21 +149,20 @@ async def update_dish_data():
 def reverse_url(route_name: str, **kwargs: UUID) -> str:
     routes = {
         'get_menus': '/menus',
-        'post_menu': '/menus',
+        'create_menu': '/menus',
         'get_menu': f'/menus/{kwargs.get("menu_id", "")}',
-        'patch_menu': f'/menus/{kwargs.get("menu_id", "")}',
+        'update_menu': f'/menus/{kwargs.get("menu_id", "")}',
         'delete_menu': f'/menus/{kwargs.get("menu_id", "")}',
-        'get_menu_orm': f'/menus/ORM/{kwargs.get("menu_id", "")}',
         'get_submenus': f'/menus/{kwargs.get("menu_id", "")}/submenus',
-        'post_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus',
+        'create_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus',
         'get_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
-        'patch_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
+        'update_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
         'delete_submenu': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}',
         'get_dishes': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}/dishes',
-        'post_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}/dishes',
+        'create_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/{kwargs.get("submenu_id", "")}/dishes',
         'get_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
                     f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
-        'patch_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
+        'update_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
                       f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
         'delete_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
                        f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',

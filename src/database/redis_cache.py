@@ -38,14 +38,14 @@ class RedisDBBase(metaclass=ABCMeta):
 class RedisDB(RedisDBBase):
     def __init__(self, host: str, port: int, password: str, expire_in_sec: int) -> None:
         self.expire_in_sec = expire_in_sec
-        self.redis = Redis(host=host, port=port, password=password)
+        self.redis: Redis = Redis(host=host, port=port, password=password)
 
     @backoff.on_exception(backoff.expo,
                           (BusyLoadingError, ConnectionError, TimeoutError),
                           max_tries=5,
                           raise_on_giveup=True)
     async def set_key(self, key: str | UUID, value: Any) -> None:
-        data = json.dumps(jsonable_encoder(value))
+        data: str = json.dumps(jsonable_encoder(value))
         await self.redis.set(key, data, self.expire_in_sec)
 
     @backoff.on_exception(backoff.expo,

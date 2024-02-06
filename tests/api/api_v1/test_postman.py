@@ -22,14 +22,14 @@ class TestPostman:
             'price': '55.50',
         }
         response_menu = await async_client.post(
-            url=reverse_url('post_menu'),
+            url=reverse_url('create_menu'),
             json=menu_data,
         )
         assert response_menu.status_code == status.HTTP_201_CREATED
         self.__class__.dish_submenu_menu_id = response_menu.json()['id']
 
         response_submenu = await async_client.post(
-            url=reverse_url('post_submenu',
+            url=reverse_url('create_submenu',
                             menu_id=self.dish_submenu_menu_id),
             json=submenu_data,
         )
@@ -37,7 +37,7 @@ class TestPostman:
         self.__class__.dish_submenu_id = response_submenu.json()['id']
 
         response_dish_1 = await async_client.post(
-            url=reverse_url('post_dish',
+            url=reverse_url('create_dish',
                             menu_id=self.dish_submenu_menu_id,
                             submenu_id=self.dish_submenu_id),
             json=dish_data,
@@ -45,7 +45,7 @@ class TestPostman:
         assert response_dish_1.status_code == status.HTTP_201_CREATED
 
         response_dish_2 = await async_client.post(
-            url=reverse_url('post_dish',
+            url=reverse_url('create_dish',
                             menu_id=self.dish_submenu_menu_id,
                             submenu_id=self.dish_submenu_id),
             json=dish_data_2,

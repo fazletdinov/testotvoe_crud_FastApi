@@ -23,20 +23,20 @@ class TestDish:
             dish_data: dict[str, str],
     ) -> None:
         response_menu = await async_client.post(
-            url=reverse_url('post_menu'),
+            url=reverse_url('create_menu'),
             json=menu_data,
         )
         self.__class__.dish_submenu_menu_id = response_menu.json()['id']
 
         response_submenu = await async_client.post(
-            reverse_url('post_submenu',
+            reverse_url('create_submenu',
                         menu_id=self.dish_submenu_menu_id),
             json=submenu_data
         )
         self.__class__.dish_submenu_id = response_submenu.json()['id']
 
         response_dish = await async_client.post(
-            reverse_url('post_dish',
+            reverse_url('create_dish',
                         menu_id=self.dish_submenu_menu_id,
                         submenu_id=self.dish_submenu_id),
             json=dish_data,
@@ -84,7 +84,7 @@ class TestDish:
             self, async_client: AsyncClient, update_dish_data: dict[str, str]
     ) -> None:
         response = await async_client.patch(
-            url=reverse_url('patch_dish',
+            url=reverse_url('update_dish',
                             menu_id=self.dish_submenu_menu_id,
                             submenu_id=self.dish_submenu_id,
                             dish_id=self.dish_id),
@@ -106,7 +106,7 @@ class TestDish:
     ) -> None:
         dish_id = uuid.uuid4()
         response = await async_client.patch(
-            url=reverse_url('patch_dish',
+            url=reverse_url('update_dish',
                             menu_id=self.dish_submenu_menu_id,
                             submenu_id=self.dish_submenu_id,
                             dish_id=dish_id),

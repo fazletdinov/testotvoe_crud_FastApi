@@ -15,7 +15,7 @@ class TestMenu:
     async def test_create_menu(
             self, async_client: AsyncClient, menu_data: dict[str, str]
     ) -> None:
-        response = await async_client.post(url=reverse_url('post_menu'),
+        response = await async_client.post(url=reverse_url('create_menu'),
                                            json=menu_data)
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -55,7 +55,7 @@ class TestMenu:
             self, async_client: AsyncClient, update_menu_data: dict[str, str]
     ) -> None:
         response = await async_client.patch(
-            url=reverse_url('patch_menu',
+            url=reverse_url('update_menu',
                             menu_id=self.id),
             json=update_menu_data
         )
@@ -76,7 +76,7 @@ class TestMenu:
     ) -> None:
         menu_id = uuid.uuid4()
         response = await async_client.patch(
-            url=reverse_url('patch_menu',
+            url=reverse_url('update_menu',
                             menu_id=menu_id),
             json=update_menu_data
         )

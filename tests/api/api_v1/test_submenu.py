@@ -19,14 +19,14 @@ class TestSubmenu:
             menu_data: dict[str, str],
             submenu_data: dict[str, str],
     ) -> None:
-        response_menu = await async_client.post(url=reverse_url('post_menu'),
+        response_menu = await async_client.post(url=reverse_url('create_menu'),
                                                 json=menu_data)
 
         assert response_menu.status_code == status.HTTP_201_CREATED
         self.__class__.submenu_menu_id = response_menu.json()['id']
 
         response_submenu = await async_client.post(
-            url=reverse_url('post_submenu',
+            url=reverse_url('create_submenu',
                             menu_id=self.submenu_menu_id),
             json=submenu_data
         )
@@ -69,7 +69,7 @@ class TestSubmenu:
             self, async_client: AsyncClient, update_submenu_data: dict[str, str]
     ) -> None:
         response = await async_client.patch(
-            url=reverse_url('patch_submenu',
+            url=reverse_url('update_submenu',
                             menu_id=self.submenu_menu_id,
                             submenu_id=self.submenu_id),
             json=update_submenu_data,
@@ -90,7 +90,7 @@ class TestSubmenu:
     ) -> None:
         submenu_id = uuid.uuid4()
         response = await async_client.patch(
-            url=reverse_url('patch_submenu',
+            url=reverse_url('update_submenu',
                             menu_id=self.submenu_menu_id,
                             submenu_id=submenu_id),
             json=update_submenu_data,
