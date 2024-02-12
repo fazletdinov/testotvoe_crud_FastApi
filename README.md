@@ -51,6 +51,10 @@ make down-test
 * bind 0.0.0.0 — замапил Redis на внутренний localhost Docker-контейнера.
 * maxmemory 100mb — ограничил размер кэша.
 * maxmemory-policy volatile-ttl — эта политика позволяет удалить наименее актуальные данные при достижении лимита памяти.
+* Добавить в проект фоновую задачу с помощью Celery + RabbitMQ - посмотрите docker-compose.yml
+* Добавить эндпоинт (GET) для вывода всех меню со всеми связанными подменю и со всеми связанными блюдами - ENDPOINT - "full_menu_submenu_dish"
+src/api/v1_handlers/menu/ - в самом конце
+* Обновление меню из локального файла раз в 15 сек. - tasks
 ### Автор
 
 [Idel Fazletdinov - fazletdinov](https://github.com/fazletdinov)

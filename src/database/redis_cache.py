@@ -6,10 +6,9 @@ from uuid import UUID
 import backoff
 from aioredis.client import Redis
 from aioredis.exceptions import BusyLoadingError, ConnectionError, TimeoutError
-from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 
-from src.core.config import Settings, get_settings
+from src.core.config import settings
 
 
 class RedisDBBase(metaclass=ABCMeta):
@@ -78,9 +77,16 @@ class RedisDB(RedisDBBase):
     async def delete_cache(self, name: str) -> Any:
         await self.redis.delete(name)
 
+    @backoff.on_exception(backoff.expo,
+                          (BusyLoadingError, ConnectionError, TimeoutError),
+                          max_tries=5,
+                          raise_on_giveup=True)
+    async def delete_all(self) -> Any:
+        await self.redis.flushall(asynchronous=True)
+
 
 @backoff.on_exception(backoff.expo, ConnectionError, max_tries=5, raise_on_giveup=True)
-async def get_redis(settings: Settings = Depends(get_settings)) -> RedisDBBase:
+def get_redis() -> RedisDB:
     return RedisDB(host=settings.redis.host,
                    port=settings.redis.port,
                    password=settings.redis.password.get_secret_value(),

@@ -15,6 +15,13 @@ asyncpg = "^0.29.0"
 typing-extensions = "^4.9.0"
 aioredis = "^2.0.1"
 backoff = "^2.2.1"
+celery = {extras = ["rabbitmq"], version = "^5.3.6"}
+redis = "^5.0.1"
+pandas = "^2.2.0"
+openpyxl = "^3.1.2"
+psycopg2-binary = "^2.9.9"
+pyarrow = "^15.0.0"
+requests = "^2.31.0"
 
 
 [tool.poetry.group.dev.dependencies]

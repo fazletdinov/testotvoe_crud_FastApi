@@ -2,6 +2,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from .submenu import SubmenuFullResponse
+
 
 class MenuCreate(BaseModel):
     title: str
@@ -22,5 +24,17 @@ class MenuResponse(BaseModel):
     dishes_count: int
 
     model_config = ConfigDict(
-        from_attributes=True, revalidate_instances="always"
+        from_attributes=True, revalidate_instances='always'
+    )
+
+
+class MenuSubmenuDishResponse(BaseModel):
+    id: UUID
+    title: str
+    description: str
+
+    submenus: list[SubmenuFullResponse]
+
+    model_config = ConfigDict(
+        from_attributes=True, revalidate_instances='always'
     )

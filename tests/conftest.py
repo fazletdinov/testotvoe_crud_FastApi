@@ -1,11 +1,10 @@
 import asyncio
 from asyncio import current_task
-from typing import Any, AsyncGenerator
+from typing import AsyncGenerator
 from uuid import UUID
 
 import backoff
 import pytest
-from fastapi import Depends
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -16,13 +15,13 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import StaticPool
 
 from main import app
-from src.core.config import Settings, get_settings
+from src.core.config import settings
 from src.database.models import Base
 from src.database.redis_cache import RedisDB, get_redis
 from src.database.session import db_helper
 
 async_engine = create_async_engine(
-    url=get_settings().db_test.async_url, echo=False, poolclass=StaticPool
+    url=settings.db_test.async_url, echo=False, poolclass=StaticPool
 )
 async_session_factory = async_sessionmaker(
     async_engine,
@@ -35,21 +34,20 @@ async_session_factory = async_sessionmaker(
 Base.metadata.bind = async_engine
 
 
-def get_scoped_session() -> Any:
-    session = async_scoped_session(
-        session_factory=async_session_factory, scopefunc=current_task
+async def override_scoped_session_dependency():
+    scoped_factory = async_scoped_session(
+        async_session_factory,
+        scopefunc=current_task,
     )
-    return session
-
-
-async def override_scoped_session_dependency() -> AsyncSession:
-    session = get_scoped_session()
-    yield session
-    await session.close()
+    try:
+        async with scoped_factory() as session:
+            yield session
+    finally:
+        await scoped_factory.remove()
 
 
 @backoff.on_exception(backoff.expo, ConnectionError, max_tries=5, raise_on_giveup=True)
-async def override_get_redis(settings: Settings = Depends(get_settings)) -> RedisDB:
+async def override_get_redis() -> RedisDB:
     return RedisDB(host=settings.redis_test.host,
                    port=settings.redis_test.port,
                    password=settings.redis_test.password.get_secret_value(),
@@ -83,7 +81,7 @@ def event_loop():
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
             app=app,
-            base_url=f'{get_settings().db_test.API_V1_STR}',
+            base_url=f'{settings.db_test.API_V1_STR}',
             follow_redirects=True,
     ) as aclient:
         yield aclient
@@ -91,9 +89,15 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture(scope='session')
 async def db() -> AsyncGenerator[AsyncSession, None]:
-    session = get_scoped_session()
-    yield session
-    await session.close()
+    scoped_factory = async_scoped_session(
+        async_session_factory,
+        scopefunc=current_task,
+    )
+    try:
+        async with scoped_factory() as session:
+            yield session
+    finally:
+        await scoped_factory.remove()
 
 
 @pytest.fixture
@@ -163,7 +167,7 @@ def reverse_url(route_name: str, **kwargs: UUID) -> str:
         'get_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
                     f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
         'update_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
-                      f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
+                       f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
         'delete_dish': f'/menus/{kwargs.get("menu_id", "")}/submenus/'
                        f'{kwargs.get("submenu_id", "")}/dishes/{kwargs.get("dish_id", "")}',
     }

@@ -65,7 +65,38 @@ class RedisSettings(BaseSettings):
     password: SecretStr
     expire_in_sec: int
 
+    def _url(self) -> str:
+        return (
+            f'redis://:{self.password.get_secret_value()}@{self.host}:{self.port}/0'
+        )
+
+    @property
+    def backend_url(self) -> str:
+        return self._url()
+
     model_config = SettingsConfigDict(env_prefix='redis_', env_file=BASE_DIR / '.env')
+
+
+class RabbitmqSettings(BaseSettings):
+    host: str
+    user: str
+    port1: int
+    port2: int
+    hostname: str
+    password: SecretStr
+    vhost: str
+
+    def _url(self) -> str:
+        return (
+            f'amqp://{self.user}:{self.password.get_secret_value()}@'
+            f'{self.host}:{self.port1}/{self.vhost}'
+        )
+
+    @property
+    def broker_url(self) -> str:
+        return self._url()
+
+    model_config = SettingsConfigDict(env_prefix='rabbitmq_', env_file=BASE_DIR / '.env')
 
 
 class RedisTestSettings(BaseSettings):
@@ -83,8 +114,12 @@ class Settings:
     db_test: DatabaseTestSettings = DatabaseTestSettings()
     redis: RedisSettings = RedisSettings()
     redis_test: RedisTestSettings = RedisTestSettings()
+    rabbitmq: RabbitmqSettings = RabbitmqSettings()
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+settings = get_settings()

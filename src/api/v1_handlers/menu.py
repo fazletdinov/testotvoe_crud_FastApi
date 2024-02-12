@@ -12,7 +12,12 @@ from fastapi import (
 )
 from sqlalchemy import ScalarResult
 
-from src.schemas.menu import MenuCreate, MenuResponse, MenuUpdate
+from src.schemas.menu import (
+    MenuCreate,
+    MenuResponse,
+    MenuSubmenuDishResponse,
+    MenuUpdate,
+)
 from src.service.menu import MenuService, get_menu_service
 
 menu_router = APIRouter(tags=['Menu'])
@@ -74,3 +79,11 @@ async def delete_menu(
     if menu_deleted_id is not None:
         return {'status': True, 'message': 'The menu has been deleted'}
     return None
+
+
+@menu_router.get('/full_menus_submenu_dish/', response_model=list[MenuSubmenuDishResponse])
+async def get_full_menus_submenus_dishes(
+        offset: Annotated[int, Query()] = 0,
+        limit: Annotated[int, Query()] = 50,
+        menu_service: MenuService = Depends(get_menu_service)):
+    return await menu_service.full_menus_submenus_dishes(offset, limit)

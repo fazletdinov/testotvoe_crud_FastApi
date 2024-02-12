@@ -1,7 +1,8 @@
-version: '3.8'
+version: '3.9'
 
 volumes:
   pg_data:
+  rabbitmq_data:
 
 networks:
   dev:
@@ -47,10 +48,34 @@ services:
     expose:
       - "6379"
     healthcheck:
-      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
-      interval: 1s
-      timeout: 3s
-      retries: 5
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  rabbitmq_queue:
+    image: rabbitmq:latest
+    hostname: ${RABBITMQ_HOSTNAME}
+    container_name: rabbitmq
+    restart: always
+    networks:
+      dev:
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    env_file:
+      - .env
+    expose:
+      - "15672"
+      - "5672"
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
 
   app:
     build:
@@ -61,9 +86,48 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis_cache
+      db:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
       - ./:/code
+
+  celery_worker:
+    build:
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: celery -A tasks:celery worker --loglevel=info
+    networks:
+      dev:
+    volumes:
+      - ./:/code
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq_queue:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+
+  celery-beat:
+    container_name: celery_beat
+    build:
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./:/code
+    command: celery -A tasks:celery beat --loglevel=DEBUG
+    networks:
+      - dev
+    depends_on:
+      redis_cache:
+        condition: service_healthy
+      rabbitmq_queue:
+        condition: service_healthy

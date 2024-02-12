@@ -9,7 +9,7 @@ from src.crud.menu import MenuDAL
 from src.database.models.menu import Menu
 from src.database.redis_cache import RedisDB, get_redis
 from src.database.session import db_helper
-from src.schemas.menu import MenuCreate, MenuResponse
+from src.schemas.menu import MenuCreate, MenuResponse, MenuSubmenuDishResponse
 
 
 class MenuServiceBase(metaclass=ABCMeta):
@@ -102,6 +102,20 @@ class MenuService(MenuServiceBase):
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
         back_tasks.add_task(self.cache.delete_cache, 'dish_list')
         return menu_delete_id
+
+    async def full_menus_submenus_dishes(
+            self, offset: int, limit: int
+    ) -> list[MenuResponse]:
+        full_menus_submenus_dishes = await self.cache.get_value('full_menus_submenus_dishes')
+        if full_menus_submenus_dishes:
+            data_full_menus_submenus_dishes = full_menus_submenus_dishes
+        else:
+            menu_crud = MenuDAL(self.session)
+            menus_submenus_dishes_list = await menu_crud.get_full_menus_submenus_dishes(offset, limit)
+            data_full_menus_submenus_dishes = [MenuSubmenuDishResponse.model_validate(
+                menu) for menu in menus_submenus_dishes_list]
+            await self.cache.set_all('full_menus_submenus_dishes', data_full_menus_submenus_dishes)
+        return data_full_menus_submenus_dishes
 
 
 def get_menu_service(

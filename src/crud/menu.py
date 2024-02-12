@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy import Result, Row, delete, exc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from typing_extensions import override
 
 from src.database.models.dish import Dish
@@ -141,4 +142,25 @@ class MenuDAL(CrudeBase):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail='Неизвестная ошибка при удалении Menu',
+            )
+
+    async def get_full_menus_submenus_dishes(
+            self, offset: int, limit: int
+    ) -> Sequence[Row[tuple[Menu, int, int]]]:
+        try:
+            query = (
+                select(Menu
+                       )
+                .options(selectinload(Menu.submenus).selectinload(Submenu.dishes))
+                .offset(offset=offset)
+                .limit(limit=limit)
+            )
+            res: Result = await self.db_session.execute(query)
+            menu_list = res.scalars().all()
+            return menu_list
+
+        except exc.SQLAlchemyError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='Ошибка SqlalchemyError при получении списка Menu, Submenu, Dish',
             )
