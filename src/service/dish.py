@@ -46,6 +46,7 @@ class DishService(DishServiceBase):
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
         back_tasks.add_task(self.cache.delete_cache, 'dish_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         back_tasks.add_task(self.cache.delete_cache, f'submenu_{submenu_id}')
         back_tasks.add_task(self.cache.delete_cache, f'menu_{menu_id}')
         return DishResponse.model_validate(dish)
@@ -111,6 +112,7 @@ class DishService(DishServiceBase):
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
         back_tasks.add_task(self.cache.delete_cache, 'dish_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         return dish_deleted_id
 
 

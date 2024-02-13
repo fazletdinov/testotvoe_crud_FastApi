@@ -101,7 +101,7 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-async def menu_data():
+async def menu_data() -> dict[str, str]:
     return {
         'title': 'title menu 1',
         'description': 'description menu description 1',
@@ -109,7 +109,7 @@ async def menu_data():
 
 
 @pytest.fixture
-async def submenu_data():
+async def submenu_data() -> dict[str, str]:
     return {
         'title': 'title submenu 1',
         'description': 'description submenu description 1',
@@ -117,7 +117,7 @@ async def submenu_data():
 
 
 @pytest.fixture
-async def dish_data():
+async def dish_data() -> dict[str, str]:
     return {
         'title': 'title dish 1',
         'description': 'description dish description 1',
@@ -126,7 +126,7 @@ async def dish_data():
 
 
 @pytest.fixture
-async def update_menu_data():
+async def update_menu_data() -> dict[str, str]:
     return {
         'title': 'title updated menu 1',
         'description': 'description updated menu 1',
@@ -134,7 +134,7 @@ async def update_menu_data():
 
 
 @pytest.fixture
-async def update_submenu_data():
+async def update_submenu_data() -> dict[str, str]:
     return {
         'title': 'title updated submenu 1',
         'description': 'description updated submenu 1',
@@ -142,7 +142,7 @@ async def update_submenu_data():
 
 
 @pytest.fixture
-async def update_dish_data():
+async def update_dish_data() -> dict[str, str]:
     return {
         'title': 'title updated submenu 1',
         'description': 'description updated submenu 1',

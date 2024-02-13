@@ -45,6 +45,7 @@ class SubmenuService(SubmenuServiceBase):
         submenu = await submenu_crud.create(menu_id, submenu_body)
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         back_tasks.add_task(self.cache.delete_cache, f'menu_{menu_id}')
         return SubmenuResponse.model_validate(submenu)
 
@@ -112,6 +113,7 @@ class SubmenuService(SubmenuServiceBase):
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
         back_tasks.add_task(self.cache.delete_cache, 'dish_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         return submenu_deleted_id
 
 

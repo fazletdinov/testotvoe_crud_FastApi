@@ -52,7 +52,8 @@ def write_hash(hash_summ: str) -> None:
         f.write(hash_summ)
 
 
-def excel_to_json(array: list[list]) -> tuple[dict[str, dict[Any, Any]], dict[str, dict[Any, Any]], dict[str, dict[Any, Any]]]:
+def excel_to_dict(array: list[list]) -> tuple[
+        dict[str, dict[Any, Any]], dict[str, dict[Any, Any]], dict[str, dict[Any, Any]]]:
     menu_json: dict[str, dict] = {'id': {}, 'title': {}, 'description': {}}
     submenu_json: dict[str, dict] = {'id': {}, 'menu_id': {}, 'title': {}, 'description': {}}
     dish_json: dict[str, dict] = {'id': {}, 'submenu_id': {},
@@ -90,7 +91,7 @@ def excel_to_json(array: list[list]) -> tuple[dict[str, dict[Any, Any]], dict[st
 
 
 def run_update_database(data: list) -> None:
-    menus_data, submenus_data, dishes_data = excel_to_json(data)
+    menus_data, submenus_data, dishes_data = excel_to_dict(data)
 
     dish_df = pd.read_json(json.dumps(dishes_data))
     dish_df.to_sql('dish', engine, if_exists='replace', index=False,
@@ -140,7 +141,6 @@ def update_database() -> None:
                 loop.close()
             else:
                 asyncio.create_task(redis.delete_all())
-
 
 # if __name__ == "__main__":
 #     wb = load_workbook(ADMIN_FILE_MENU)

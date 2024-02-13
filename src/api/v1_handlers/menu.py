@@ -81,7 +81,7 @@ async def delete_menu(
     return None
 
 
-@menu_router.get('/full_menus_submenu_dish/', response_model=list[MenuSubmenuDishResponse])
+@menu_router.get('/full_menus_submenus_dishes/', response_model=list[MenuSubmenuDishResponse])
 async def get_full_menus_submenus_dishes(
         offset: Annotated[int, Query()] = 0,
         limit: Annotated[int, Query()] = 50,

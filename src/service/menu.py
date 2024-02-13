@@ -43,6 +43,7 @@ class MenuService(MenuServiceBase):
         menu_crud = MenuDAL(self.session)
         menu = await menu_crud.create(body)
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         return MenuResponse.model_validate(menu)
 
     async def get_menu(self, menu_id: UUID) -> MenuResponse | Exception:
@@ -87,6 +88,7 @@ class MenuService(MenuServiceBase):
         data_menu_update = MenuResponse.model_validate(menu_updated)
         await self.cache.set_key(f'menu_{menu_id}', data_menu_update)
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         return data_menu_update
 
     async def delete_menu(self, menu_id: UUID, back_tasks: BackgroundTasks) -> Exception | None | UUID:
@@ -101,6 +103,7 @@ class MenuService(MenuServiceBase):
         back_tasks.add_task(self.cache.delete_cache, 'menu_list')
         back_tasks.add_task(self.cache.delete_cache, 'submenu_list')
         back_tasks.add_task(self.cache.delete_cache, 'dish_list')
+        back_tasks.add_task(self.cache.delete_cache, 'full_menus_submenus_dishes')
         return menu_delete_id
 
     async def full_menus_submenus_dishes(
